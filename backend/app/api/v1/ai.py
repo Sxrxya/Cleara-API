@@ -16,6 +16,7 @@ class AICleanRequest(BaseModel):
     data: Dict[str, Any] = Field(..., description="Data to clean")
     instructions: Optional[str] = Field(None, description="Custom cleaning instructions")
     provider: Optional[str] = Field(None, description="Force specific provider (groq/gemini/huggingface)")
+    output_formats: Optional[List[int]] = Field([4], description="Output format IDs: 1=Insights, 2=Report, 3=Viz, 4=Raw, 5=Explain, 6=Executive, 7=All")
     
     class Config:
         json_schema_extra = {
@@ -35,6 +36,7 @@ class AICleanResponse(BaseModel):
     cleaned_data: Dict[str, Any]
     provider_used: str
     success: bool
+    outputs: Optional[Dict[str, Any]] = None  # Multi-format outputs
 
 
 class EntityExtractionRequest(BaseModel):
@@ -109,6 +111,10 @@ async def ai_clean_data(request: AICleanRequest):
                 detail="No AI providers configured. Please set API keys in .env"
             )
         
+        # Store original data for comparison
+        import copy
+        original_data = copy.deepcopy(request.data)
+        
         # Clean data
         cleaned = await ai_service.clean_data(
             data=request.data,
@@ -119,10 +125,22 @@ async def ai_clean_data(request: AICleanRequest):
         # Determine which provider was used
         provider_used = request.provider if request.provider else available[0]
         
+        # Generate multiple output formats if requested
+        outputs = None
+        if request.output_formats and len(request.output_formats) > 0:
+            from app.services.ai.output_formatter import OutputFormatter
+            outputs = OutputFormatter.generate_outputs(
+                cleaned_data=cleaned,
+                original_data=original_data,
+                format_ids=request.output_formats,
+                provider=provider_used
+            )
+        
         return AICleanResponse(
             cleaned_data=cleaned,
             provider_used=provider_used,
-            success=True
+            success=True,
+            outputs=outputs
         )
     
     except Exception as e:
