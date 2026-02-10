@@ -1,0 +1,119 @@
+﻿
+============================================================
+  CLEARA AIOPS ENGINE - METRICS VALIDATION
+============================================================
+
+[Testing] Database Connection Failure
+------------------------------------------------------------
+  Generated Events:
+    - Logs: 3
+    - Metrics: 3
+    - Alerts: 1
+    - Total: 7
+
+  Correlation Results:
+    - Incidents Detected: 2
+    - Noise Reduction: 71.4%
+
+  Incident Details:
+    - ID: INC-prometheus-1770597466
+    - Root Cause: Database connection pool exhausted or database server unreachable
+    - Confidence: 40.0%
+    - Severity: critical
+    - Affected Services: prometheus
+
+  Recommendation:
+    Check database server status, verify connection pool settings, review network connectivity
+
+[Testing] High CPU/Memory Usage
+------------------------------------------------------------
+  Generated Events:
+    - Logs: 3
+    - Metrics: 4
+    - Alerts: 1
+    - Total: 8
+
+  Correlation Results:
+    - Incidents Detected: 2
+    - Noise Reduction: 75.0%
+
+  Incident Details:
+    - ID: INC-web-server-02-1770597466
+    - Root Cause: Resource exhaustion - High CPU/Memory usage detected
+    - Confidence: 100.0%
+    - Severity: warning
+    - Affected Services: web-server-02
+
+  Recommendation:
+    Scale horizontally, optimize resource-intensive processes, check for memory leaks
+
+[Testing] API Latency Spike
+------------------------------------------------------------
+  Generated Events:
+    - Logs: 3
+    - Metrics: 3
+    - Alerts: 1
+    - Total: 7
+
+  Correlation Results:
+    - Incidents Detected: 2
+    - Noise Reduction: 71.4%
+
+  Incident Details:
+    - ID: INC-datadog-1770597466
+    - Root Cause: API performance degradation - Increased response times
+    - Confidence: 40.0%
+    - Severity: critical
+    - Affected Services: datadog
+
+  Recommendation:
+    Check downstream dependencies, review recent deployments, analyze slow queries
+
+============================================================
+  VALIDATION SUMMARY
+============================================================
+
+  Tests Completed: 3/3
+  Total Events: 22
+  Total Incidents: 6
+  Event-to-Incident Ratio: 22:6
+
+  KEY METRICS:
+  --------------------------------------------------------
+  Average Noise Reduction: 72.6%
+  Average Confidence: 60.0%
+  Reduction Factor: 3.7x
+
+  VALIDATION CHECKS:
+  --------------------------------------------------------
+  [FAIL] Noise Reduction >=85%: 72.6%
+  [FAIL] Confidence Score >=70%: 60.0%
+  [FAIL] Reduction Factor >=5x: 3.7x
+
+  DETAILED BREAKDOWN:
+  --------------------------------------------------------
+
+  Database Connection Failure:
+    Events: 7 -> Incidents: 2
+    Noise Reduction: 71.4%
+    Confidence: 40.0%
+    Severity: critical
+
+  High CPU/Memory Usage:
+    Events: 8 -> Incidents: 2
+    Noise Reduction: 75.0%
+    Confidence: 100.0%
+    Severity: warning
+
+  API Latency Spike:
+    Events: 7 -> Incidents: 2
+    Noise Reduction: 71.4%
+    Confidence: 40.0%
+    Severity: critical
+
+  FINAL VERDICT:
+  --------------------------------------------------------
+  [WARNING] Some metrics need improvement.
+
+============================================================
+

@@ -1,0 +1,120 @@
+﻿
+============================================================
+  CLEARA AIOPS ENGINE - METRICS VALIDATION
+============================================================
+
+[Testing] Database Connection Failure
+------------------------------------------------------------
+  Generated Events:
+    - Logs: 3
+    - Metrics: 3
+    - Alerts: 1
+    - Total: 7
+
+  Correlation Results:
+    - Incidents Detected: 1
+    - Noise Reduction: 85.7%
+
+  Incident Details:
+    - ID: INC-api-server-01-1770597722
+    - Root Cause: Database connection pool exhausted or database server unreachable
+    - Confidence: 100.0%
+    - Severity: critical
+    - Affected Services: api-server-01
+
+  Recommendation:
+    Check database server status, verify connection pool settings, review network connectivity
+
+[Testing] High CPU/Memory Usage
+------------------------------------------------------------
+  Generated Events:
+    - Logs: 3
+    - Metrics: 4
+    - Alerts: 1
+    - Total: 8
+
+  Correlation Results:
+    - Incidents Detected: 1
+    - Noise Reduction: 87.5%
+
+  Incident Details:
+    - ID: INC-web-server-02-1770597722
+    - Root Cause: Resource exhaustion - High CPU/Memory usage detected
+    - Confidence: 100.0%
+    - Severity: warning
+    - Affected Services: web-server-02
+
+  Recommendation:
+    Scale horizontally, optimize resource-intensive processes, check for memory leaks
+
+[Testing] API Latency Spike
+------------------------------------------------------------
+  Generated Events:
+    - Logs: 3
+    - Metrics: 3
+    - Alerts: 1
+    - Total: 7
+
+  Correlation Results:
+    - Incidents Detected: 1
+    - Noise Reduction: 85.7%
+
+  Incident Details:
+    - ID: INC-api-gateway-1770597722
+    - Root Cause: API performance degradation - Increased response times
+    - Confidence: 96.0%
+    - Severity: critical
+    - Affected Services: api-gateway
+
+  Recommendation:
+    Check downstream dependencies, review recent deployments, analyze slow queries
+
+============================================================
+  VALIDATION SUMMARY
+============================================================
+
+  Tests Completed: 3/3
+  Total Events: 22
+  Total Incidents: 3
+  Event-to-Incident Ratio: 22:3
+
+  KEY METRICS:
+  --------------------------------------------------------
+  Average Noise Reduction: 86.3%
+  Average Confidence: 98.7%
+  Reduction Factor: 7.3x
+
+  VALIDATION CHECKS:
+  --------------------------------------------------------
+  [PASS] Noise Reduction >=85%: 86.3%
+  [PASS] Confidence Score >=70%: 98.7%
+  [PASS] Reduction Factor >=5x: 7.3x
+
+  DETAILED BREAKDOWN:
+  --------------------------------------------------------
+
+  Database Connection Failure:
+    Events: 7 -> Incidents: 1
+    Noise Reduction: 85.7%
+    Confidence: 100.0%
+    Severity: critical
+
+  High CPU/Memory Usage:
+    Events: 8 -> Incidents: 1
+    Noise Reduction: 87.5%
+    Confidence: 100.0%
+    Severity: warning
+
+  API Latency Spike:
+    Events: 7 -> Incidents: 1
+    Noise Reduction: 85.7%
+    Confidence: 96.0%
+    Severity: critical
+
+  FINAL VERDICT:
+  --------------------------------------------------------
+  [SUCCESS] ALL METRICS VALIDATED!
+  Cleara AIOps Engine meets all performance targets.
+
+============================================================
+
