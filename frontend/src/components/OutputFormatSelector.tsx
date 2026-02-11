@@ -1,16 +1,12 @@
 "use client";
 
 import React from "react";
-import { Zap, FileText, BarChart3, Code, Sparkles, Shield, Layers, CheckCircle2 } from "lucide-react";
+import { FileText, Code, Sparkles, Layers, CheckCircle2 } from "lucide-react";
 
 const OUTPUT_FORMATS = [
-    { id: 1, name: "Instant Insights", desc: "Quick summary, anomalies, key findings", icon: Zap },
-    { id: 2, name: "Detailed Report", desc: "Full structured analysis with visuals", icon: FileText },
-    { id: 3, name: "Visualization Output", desc: "Graphs & charts data", icon: BarChart3 },
     { id: 4, name: "Raw Data Output", desc: "Clean structured JSON/CSV", icon: Code },
+    { id: 2, name: "Detailed Report", desc: "Full structured analysis of changes", icon: FileText },
     { id: 5, name: "AI-EXPLAIN MODE", desc: "Output + explanation of reasoning", icon: Sparkles },
-    { id: 6, name: "EXECUTIVE MODE", desc: "Minimal, powerful decision-making summary", icon: Shield },
-    { id: 7, name: "ALL OUTPUTS", desc: "Generate everything together", icon: Layers },
 ] as const;
 
 interface OutputFormatSelectorProps {
@@ -35,14 +31,14 @@ export default function OutputFormatSelector({ selectedFormats, onToggleFormat }
                             key={format.id}
                             onClick={() => onToggleFormat(format.id)}
                             className={`w-full text-left px-3 py-2.5 rounded-lg border transition-all duration-200 ${isSelected
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-500'
-                                    : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-white/10 hover:border-blue-300 dark:hover:border-blue-700'
+                                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-500'
+                                : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-white/10 hover:border-blue-300 dark:hover:border-blue-700'
                                 }`}
                         >
                             <div className="flex items-start gap-3">
                                 <div className={`mt-0.5 w-4 h-4 rounded border-2 flex items-center justify-center ${isSelected
-                                        ? 'bg-blue-500 border-blue-500'
-                                        : 'border-gray-300 dark:border-gray-600'
+                                    ? 'bg-blue-500 border-blue-500'
+                                    : 'border-gray-300 dark:border-gray-600'
                                     }`}>
                                     {isSelected && (
                                         <CheckCircle2 className="w-3 h-3 text-white" />
@@ -63,7 +59,7 @@ export default function OutputFormatSelector({ selectedFormats, onToggleFormat }
                 })}
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                💡 Tip: Select multiple or choose "ALL OUTPUTS" for comprehensive results
+                💡 Tip: Raw Data is selected by default. Add Report or Explanation for more details.
             </p>
         </div>
     );

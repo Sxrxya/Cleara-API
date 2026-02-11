@@ -39,19 +39,15 @@ export default function InputDataStep({ onStartProcessing }: InputDataStepProps)
     };
 
     const toggleFormat = (formatId: number) => {
-        if (formatId === 7) {
-            setSelectedFormats([7]);
-        } else {
-            setSelectedFormats(prev => {
-                const withoutAll = prev.filter(id => id !== 7);
-                if (withoutAll.includes(formatId)) {
-                    const newFormats = withoutAll.filter(id => id !== formatId);
-                    return newFormats.length > 0 ? newFormats : [4];
-                } else {
-                    return [...withoutAll, formatId];
-                }
-            });
-        }
+        setSelectedFormats(prev => {
+            if (prev.includes(formatId)) {
+                const newFormats = prev.filter(id => id !== formatId);
+                // Ensure at least one format is selected, default to Raw Data (4)
+                return newFormats.length > 0 ? newFormats : [4];
+            } else {
+                return [...prev, formatId];
+            }
+        });
     };
 
     const handleSubmit = () => {
@@ -83,8 +79,8 @@ export default function InputDataStep({ onStartProcessing }: InputDataStepProps)
                         <button
                             onClick={() => setInputMode("json")}
                             className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${inputMode === "json"
-                                    ? "bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm"
-                                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                                ? "bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm"
+                                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                                 }`}
                         >
                             JSON
@@ -92,8 +88,8 @@ export default function InputDataStep({ onStartProcessing }: InputDataStepProps)
                         <button
                             onClick={() => setInputMode("file")}
                             className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${inputMode === "file"
-                                    ? "bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm"
-                                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                                ? "bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm"
+                                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                                 }`}
                         >
                             File

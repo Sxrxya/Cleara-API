@@ -1,30 +1,21 @@
 "use client";
 
 import React, { useState } from "react";
-import { CheckCircle2, ChevronDown, ChevronRight, Download, RotateCcw, Zap, FileText, BarChart3, Code, Sparkles, Shield } from "lucide-react";
-import InstantInsightsViewer from "@/components/viewers/InstantInsightsViewer";
+import { CheckCircle2, ChevronDown, ChevronRight, Download, RotateCcw, FileText, Code, Sparkles } from "lucide-react";
 import DetailedReportViewer from "@/components/viewers/DetailedReportViewer";
-import VisualizationOutputViewer from "@/components/viewers/VisualizationOutputViewer";
 import RawDataViewer from "@/components/viewers/RawDataViewer";
 import AIExplainViewer from "@/components/viewers/AIExplainViewer";
-import ExecutiveModeViewer from "@/components/viewers/ExecutiveModeViewer";
 
 const FORMAT_ICONS: Record<string, any> = {
-    instant_insights: Zap,
-    detailed_report: FileText,
-    visualization_output: BarChart3,
     raw_data: Code,
+    detailed_report: FileText,
     ai_explain_mode: Sparkles,
-    executive_mode: Shield,
 };
 
 const FORMAT_LABELS: Record<string, string> = {
-    instant_insights: "Instant Insights",
-    detailed_report: "Detailed Report",
-    visualization_output: "Visualization Output",
-    raw_data: "Raw Data",
-    ai_explain_mode: "AI-EXPLAIN MODE",
-    executive_mode: "EXECUTIVE MODE",
+    raw_data: "Cleaned Data",
+    detailed_report: "Cleaning Report",
+    ai_explain_mode: "AI Explanation",
 };
 
 interface ResultsStepProps {
@@ -60,18 +51,12 @@ export default function ResultsStep({ results, onStartOver }: ResultsStepProps) 
     // Render the appropriate viewer for each format
     const renderViewer = (formatKey: string, formatData: any) => {
         switch (formatKey) {
-            case 'instant_insights':
-                return <InstantInsightsViewer data={formatData} />;
-            case 'detailed_report':
-                return <DetailedReportViewer data={formatData} />;
-            case 'visualization_output':
-                return <VisualizationOutputViewer data={formatData} />;
             case 'raw_data':
                 return <RawDataViewer data={formatData} />;
+            case 'detailed_report':
+                return <DetailedReportViewer data={formatData} />;
             case 'ai_explain_mode':
                 return <AIExplainViewer data={formatData} />;
-            case 'executive_mode':
-                return <ExecutiveModeViewer data={formatData} />;
             default:
                 return (
                     <div className="bg-gray-50 dark:bg-slate-800 p-4 rounded-lg">
