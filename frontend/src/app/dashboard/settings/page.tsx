@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
-    User, Mail, Lock, Bell, Shield, Trash2, Save, Layers, Terminal,
-    Key, Info, BarChart3, TrendingUp, Sparkles, ArrowLeft, Check
+    User, Bell, Shield, Trash2, Save, ArrowLeft, Check
 } from "lucide-react";
 
 interface UserSettings {
@@ -90,225 +89,180 @@ export default function SettingsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#020617] flex">
-            {/* Sidebar Navigation */}
-            <aside className="w-64 border-r border-gray-200 dark:border-white/5 hidden md:flex flex-col p-6 gap-8 bg-white dark:bg-[#020617]">
-                <Link href="/" className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-                        <Layers className="text-white w-5 h-5" />
-                    </div>
-                    <span className="text-lg font-bold">Cleara</span>
-                </Link>
-
-                <nav className="space-y-2 flex-1">
-                    {[
-                        { name: "Dashboard", href: "/dashboard", icon: BarChart3 },
-                        { name: "Playground", href: "/playground", icon: Terminal },
-                        { name: "API Keys", href: "/dashboard/api-keys", icon: Key },
-                        { name: "Usage Stats", href: "/dashboard/usage", icon: TrendingUp },
-                        { name: "Settings", href: "/dashboard/settings", icon: Info, active: true },
-                    ].map((item) => (
-                        <Link
-                            key={item.name}
-                            href={item.href}
-                            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${item.active
-                                    ? 'bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400'
-                                    : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5'
-                                }`}
-                        >
-                            <item.icon className="w-4 h-4" />
-                            {item.name}
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-3">
+                        <Link href="/dashboard" className="text-slate-400 hover:text-white transition-colors">
+                            <ArrowLeft className="w-5 h-5" />
                         </Link>
-                    ))}
-                </nav>
-
-                <div className="card-premium glass-dark !p-6 !rounded-3xl space-y-4">
-                    <div className="flex items-center gap-2 text-indigo-400 text-xs font-bold uppercase tracking-widest">
-                        <Sparkles className="w-3 h-3" />
-                        Pro Active
+                        <h1 className="text-3xl font-bold tracking-tight text-white">Account Settings</h1>
                     </div>
-                    <p className="text-xs text-gray-500 leading-relaxed">
-                        You are currently using the Professional tier.
-                    </p>
+                    <p className="text-slate-400">Manage your account preferences and settings</p>
                 </div>
-            </aside>
+            </div>
 
-            {/* Main Content */}
-            <main className="flex-1 p-6 md:p-10 space-y-10">
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                        <div className="flex items-center gap-3">
-                            <Link href="/dashboard" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                                <ArrowLeft className="w-5 h-5" />
-                            </Link>
-                            <h1 className="text-3xl font-bold tracking-tight">Account Settings</h1>
-                        </div>
-                        <p className="text-gray-500">Manage your account preferences and settings</p>
-                    </div>
+            {/* Success Message */}
+            {success && (
+                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 flex items-center gap-3">
+                    <Check className="w-5 h-5 text-green-400" />
+                    <p className="text-green-200">Settings saved successfully!</p>
                 </div>
+            )}
 
-                {/* Success Message */}
-                {success && (
-                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 flex items-center gap-3">
-                        <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
-                        <p className="text-green-800 dark:text-green-200">Settings saved successfully!</p>
-                    </div>
-                )}
+            {/* Error Message */}
+            {error && (
+                <div className="bg-red-900/20 border border-red-800 rounded-lg p-4">
+                    <p className="text-red-200">Error: {error}</p>
+                </div>
+            )}
 
-                {/* Error Message */}
-                {error && (
-                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                        <p className="text-red-800 dark:text-red-200">Error: {error}</p>
-                    </div>
-                )}
+            {/* Loading State */}
+            {loading && (
+                <div className="flex items-center justify-center py-20">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+                </div>
+            )}
 
-                {/* Loading State */}
-                {loading && (
-                    <div className="flex items-center justify-center py-20">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-                    </div>
-                )}
-
-                {/* Settings Form */}
-                {!loading && (
-                    <div className="max-w-3xl space-y-6">
-                        {/* Profile Section */}
-                        <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-white/5 p-6">
-                            <div className="flex items-center gap-3 mb-6">
-                                <User className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Profile Information</h2>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Full Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                        placeholder="John Doe"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Email Address
-                                    </label>
-                                    <input
-                                        type="email"
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                        placeholder="john@example.com"
-                                    />
-                                </div>
-                            </div>
+            {/* Settings Form */}
+            {!loading && (
+                <div className="max-w-3xl space-y-6">
+                    {/* Profile Section */}
+                    <div className="bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-xl p-6 shadow-lg shadow-black/20">
+                        <div className="flex items-center gap-3 mb-6">
+                            <User className="w-5 h-5 text-indigo-400" />
+                            <h2 className="text-xl font-bold text-white">Profile Information</h2>
                         </div>
 
-                        {/* Preferences Section */}
-                        <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-white/5 p-6">
-                            <div className="flex items-center gap-3 mb-6">
-                                <Bell className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Preferences</h2>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    Full Name
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    className="w-full px-4 py-2 border border-white/10 rounded-lg bg-slate-900/50 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent placeholder-slate-500 transition-all"
+                                    placeholder="John Doe"
+                                />
                             </div>
 
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="font-medium text-gray-900 dark:text-white">Email Notifications</p>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                                            Receive email updates about your API usage
-                                        </p>
-                                    </div>
-                                    <button
-                                        onClick={() => setFormData({ ...formData, notifications_enabled: !formData.notifications_enabled })}
-                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.notifications_enabled ? 'bg-indigo-600' : 'bg-gray-200 dark:bg-gray-700'
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    Email Address
+                                </label>
+                                <input
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    className="w-full px-4 py-2 border border-white/10 rounded-lg bg-slate-900/50 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent placeholder-slate-500 transition-all"
+                                    placeholder="john@example.com"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Preferences Section */}
+                    <div className="bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-xl p-6 shadow-lg shadow-black/20">
+                        <div className="flex items-center gap-3 mb-6">
+                            <Bell className="w-5 h-5 text-indigo-400" />
+                            <h2 className="text-xl font-bold text-white">Preferences</h2>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="font-medium text-white">Email Notifications</p>
+                                    <p className="text-sm text-slate-400">
+                                        Receive email updates about your API usage
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setFormData({ ...formData, notifications_enabled: !formData.notifications_enabled })}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.notifications_enabled ? 'bg-indigo-600' : 'bg-slate-700'
+                                        }`}
+                                >
+                                    <span
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.notifications_enabled ? 'translate-x-6' : 'translate-x-1'
                                             }`}
-                                    >
-                                        <span
-                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.notifications_enabled ? 'translate-x-6' : 'translate-x-1'
-                                                }`}
-                                        />
-                                    </button>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Theme
-                                    </label>
-                                    <select
-                                        value={formData.theme}
-                                        onChange={(e) => setFormData({ ...formData, theme: e.target.value })}
-                                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                    >
-                                        <option value="light">Light</option>
-                                        <option value="dark">Dark</option>
-                                        <option value="system">System</option>
-                                    </select>
-                                </div>
+                                    />
+                                </button>
                             </div>
-                        </div>
 
-                        {/* API Information */}
-                        {settings && (
-                            <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-white/5 p-6">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <Shield className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">API Information</h2>
-                                </div>
-
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-gray-600 dark:text-gray-400">API Version</span>
-                                        <span className="font-mono text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-                                            {settings.api_version}
-                                        </span>
-                                    </div>
-                                </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    Theme
+                                </label>
+                                <select
+                                    value={formData.theme}
+                                    onChange={(e) => setFormData({ ...formData, theme: e.target.value })}
+                                    className="w-full px-4 py-2 border border-white/10 rounded-lg bg-slate-900/50 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                >
+                                    <option value="dark">Dark (AI Studio)</option>
+                                    <option value="light">Light</option>
+                                    <option value="system">System</option>
+                                </select>
                             </div>
-                        )}
-
-                        {/* Save Button */}
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={handleSave}
-                                disabled={saving}
-                                className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-lg font-medium transition-colors"
-                            >
-                                {saving ? (
-                                    <>
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                        Saving...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Save className="w-4 h-4" />
-                                        Save Changes
-                                    </>
-                                )}
-                            </button>
-                        </div>
-
-                        {/* Danger Zone */}
-                        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6">
-                            <div className="flex items-center gap-3 mb-4">
-                                <Trash2 className="w-5 h-5 text-red-600 dark:text-red-400" />
-                                <h2 className="text-xl font-bold text-red-900 dark:text-red-100">Danger Zone</h2>
-                            </div>
-                            <p className="text-sm text-red-800 dark:text-red-200 mb-4">
-                                Once you delete your account, there is no going back. Please be certain.
-                            </p>
-                            <button className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors">
-                                Delete Account
-                            </button>
                         </div>
                     </div>
-                )}
-            </main>
+
+                    {/* API Information */}
+                    {settings && (
+                        <div className="bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-xl p-6 shadow-lg shadow-black/20">
+                            <div className="flex items-center gap-3 mb-6">
+                                <Shield className="w-5 h-5 text-indigo-400" />
+                                <h2 className="text-xl font-bold text-white">API Information</h2>
+                            </div>
+
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-slate-400">API Version</span>
+                                    <span className="font-mono text-sm font-semibold text-indigo-400">
+                                        {settings.api_version}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Save Button */}
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 text-white rounded-lg font-medium transition-colors shadow-lg shadow-indigo-500/20"
+                        >
+                            {saving ? (
+                                <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                    Saving...
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="w-4 h-4" />
+                                    Save Changes
+                                </>
+                            )}
+                        </button>
+                    </div>
+
+                    {/* Danger Zone */}
+                    <div className="bg-red-900/20 border border-red-800/50 rounded-xl p-6 shadow-lg shadow-black/20">
+                        <div className="flex items-center gap-3 mb-4">
+                            <Trash2 className="w-5 h-5 text-red-500" />
+                            <h2 className="text-xl font-bold text-red-200">Danger Zone</h2>
+                        </div>
+                        <p className="text-sm text-red-300 mb-4">
+                            Once you delete your account, there is no going back. Please be certain.
+                        </p>
+                        <button className="px-4 py-2 bg-red-600/80 hover:bg-red-600 text-white rounded-lg font-medium transition-colors border border-red-500/20">
+                            Delete Account
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
