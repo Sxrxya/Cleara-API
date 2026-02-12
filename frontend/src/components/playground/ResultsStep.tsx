@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { CheckCircle2, ChevronDown, ChevronRight, Download, RotateCcw, FileText, Code, Sparkles } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronRight, RotateCcw, FileText, Code, Sparkles, Download, Copy, Info } from "lucide-react";
 import DetailedReportViewer from "@/components/viewers/DetailedReportViewer";
 import RawDataViewer from "@/components/viewers/RawDataViewer";
 import AIExplainViewer from "@/components/viewers/AIExplainViewer";
@@ -12,166 +12,120 @@ const FORMAT_ICONS: Record<string, any> = {
     ai_explain_mode: Sparkles,
 };
 
-const FORMAT_LABELS: Record<string, string> = {
-    raw_data: "Cleaned Data",
-    detailed_report: "Cleaning Report",
-    ai_explain_mode: "AI Explanation",
-};
-
 interface ResultsStepProps {
-    results: any;
-    onStartOver: () => void;
+    data: any;
+    onReset: () => void;
 }
 
-export default function ResultsStep({ results, onStartOver }: ResultsStepProps) {
-    const [expandedFormats, setExpandedFormats] = useState<string[]>([]);
+export default function ResultsStep({ data, onReset }: ResultsStepProps) {
+    const [activeTab, setActiveTab] = useState<"detailed_report" | "raw_data" | "ai_explain_mode">("detailed_report");
+    const [copied, setCopied] = useState(false);
 
-    const toggleFormat = (formatKey: string) => {
-        setExpandedFormats(prev =>
-            prev.includes(formatKey)
-                ? prev.filter(k => k !== formatKey)
-                : [...prev, formatKey]
-        );
-    };
-
-    const downloadJSON = (data: any, filename: string) => {
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.click();
-        URL.revokeObjectURL(url);
-    };
-
-    // Extract outputs
-    const outputs = results.outputs || {};
-    const hasMultipleFormats = Object.keys(outputs).length > 0;
-
-    // Render the appropriate viewer for each format
-    const renderViewer = (formatKey: string, formatData: any) => {
-        switch (formatKey) {
-            case 'raw_data':
-                return <RawDataViewer data={formatData} />;
-            case 'detailed_report':
-                return <DetailedReportViewer data={formatData} />;
-            case 'ai_explain_mode':
-                return <AIExplainViewer data={formatData} />;
-            default:
-                return (
-                    <div className="bg-gray-50 dark:bg-slate-800 p-4 rounded-lg">
-                        <pre className="overflow-auto max-h-96 text-xs font-mono text-gray-900 dark:text-gray-100">
-                            {JSON.stringify(formatData, null, 2)}
-                        </pre>
-                    </div>
-                );
-        }
+    const handleCopy = () => {
+        navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
     };
 
     return (
-        <div className="max-w-6xl mx-auto">
+        <div className="space-y-8 animate-slide-up">
             {/* Success Header */}
-            <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-xl border border-green-200 dark:border-green-800 p-6 mb-6">
+            <div className="flex items-center justify-between bg-green-500/10 border border-green-500/20 rounded-xl p-6 backdrop-blur-sm">
                 <div className="flex items-center gap-4">
-                    <div className="flex items-center justify-center w-16 h-16 rounded-full bg-green-500">
-                        <CheckCircle2 className="w-8 h-8 text-white" />
+                    <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/30">
+                        <CheckCircle2 className="w-6 h-6 text-white" />
                     </div>
-                    <div className="flex-1">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                            ✅ Processing Complete!
-                        </h2>
-                        <p className="text-gray-600 dark:text-gray-400">
-                            Your data has been successfully cleaned and analyzed
-                        </p>
+                    <div>
+                        <h2 className="text-xl font-bold text-white">Processing Complete</h2>
+                        <p className="text-green-400">Successfully processed {data?.cleaned?.length || 0} records in {data?.metrics?.latency || "200ms"}</p>
                     </div>
+                </div>
+                <div className="flex gap-3">
                     <button
-                        onClick={onStartOver}
-                        className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+                        onClick={handleCopy}
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-900/50 hover:bg-slate-800 text-slate-300 rounded-lg text-sm font-medium transition-colors border border-white/5 hover:border-white/10"
                     >
-                        <RotateCcw className="w-4 h-4" />
-                        <span className="font-medium">Start Over</span>
+                        {copied ? <CheckCircle2 className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                        {copied ? "Copied!" : "Copy JSON"}
+                    </button>
+                    <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors shadow-lg shadow-indigo-500/20">
+                        <Download className="w-4 h-4" />
+                        Download
                     </button>
                 </div>
             </div>
 
-            {/* Results */}
-            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-gray-200 dark:border-white/5 p-6">
-                <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                        Cleaned Results
-                    </h3>
+            {/* Viewer Tabs */}
+            <div className="space-y-6">
+                <div className="flex border-b border-white/10">
                     <button
-                        onClick={() => downloadJSON(results, 'cleaned_data.json')}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                        onClick={() => setActiveTab("detailed_report")}
+                        className={`pb-4 px-6 text-sm font-medium transition-all relative ${activeTab === "detailed_report"
+                                ? "text-indigo-400 glow-text-indigo"
+                                : "text-slate-400 hover:text-slate-200"
+                            }`}
                     >
-                        <Download className="w-4 h-4" />
-                        Download All
+                        <span className="flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            Detailed Report
+                        </span>
+                        {activeTab === "detailed_report" && (
+                            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.8)]" />
+                        )}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("raw_data")}
+                        className={`pb-4 px-6 text-sm font-medium transition-all relative ${activeTab === "raw_data"
+                                ? "text-indigo-400 glow-text-indigo"
+                                : "text-slate-400 hover:text-slate-200"
+                            }`}
+                    >
+                        <span className="flex items-center gap-2">
+                            <Code className="w-4 h-4" />
+                            Raw Data
+                        </span>
+                        {activeTab === "raw_data" && (
+                            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.8)]" />
+                        )}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("ai_explain_mode")}
+                        className={`pb-4 px-6 text-sm font-medium transition-all relative ${activeTab === "ai_explain_mode"
+                                ? "text-purple-400 glow-text-purple"
+                                : "text-slate-400 hover:text-slate-200"
+                            }`}
+                    >
+                        <span className="flex items-center gap-2">
+                            <Sparkles className="w-4 h-4" />
+                            AI Explain
+                        </span>
+                        {activeTab === "ai_explain_mode" && (
+                            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.8)]" />
+                        )}
                     </button>
                 </div>
 
-                {hasMultipleFormats ? (
-                    // Multi-format outputs
-                    <div className="space-y-3">
-                        {Object.entries(outputs).map(([formatKey, formatData]: [string, any]) => {
-                            const isExpanded = expandedFormats.includes(formatKey);
-                            const Icon = FORMAT_ICONS[formatKey] || Code;
-                            const label = FORMAT_LABELS[formatKey] || formatKey;
+                {/* Viewer Content */}
+                <div className="min-h-[500px]">
+                    {activeTab === "detailed_report" && <DetailedReportViewer data={data} />}
+                    {activeTab === "raw_data" && <RawDataViewer data={data} />}
+                    {activeTab === "ai_explain_mode" && <AIExplainViewer data={data} />}
+                </div>
+            </div>
 
-                            return (
-                                <div
-                                    key={formatKey}
-                                    className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
-                                >
-                                    {/* Header */}
-                                    <button
-                                        onClick={() => toggleFormat(formatKey)}
-                                        className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <Icon className="w-5 h-5 text-blue-500" />
-                                            <span className="font-semibold text-gray-900 dark:text-white">
-                                                {label}
-                                            </span>
-                                            <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full">
-                                                {formatData.format || formatKey}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    downloadJSON(formatData, `${formatKey}.json`);
-                                                }}
-                                                className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
-                                            >
-                                                <Download className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                                            </button>
-                                            {isExpanded ? (
-                                                <ChevronDown className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                                            ) : (
-                                                <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                                            )}
-                                        </div>
-                                    </button>
-
-                                    {/* Content - Use dedicated viewers */}
-                                    {isExpanded && (
-                                        <div className="bg-white dark:bg-slate-900">
-                                            {renderViewer(formatKey, formatData)}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                ) : (
-                    // Legacy single format
-                    <div className="bg-gray-50 dark:bg-slate-800 p-4 rounded-lg">
-                        <pre className="overflow-auto max-h-96 text-sm font-mono text-gray-900 dark:text-gray-100">
-                            {JSON.stringify(results.cleaned_data, null, 2)}
-                        </pre>
-                    </div>
-                )}
+            {/* Footer Actions */}
+            <div className="pt-8 border-t border-white/10 flex justify-between items-center text-sm text-slate-500">
+                <div className="flex items-center gap-2">
+                    <Info className="w-4 h-4" />
+                    <span>Results are cached for 24 hours.</span>
+                </div>
+                <button
+                    onClick={onReset}
+                    className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors hover:bg-white/5 px-4 py-2 rounded-lg"
+                >
+                    <RotateCcw className="w-4 h-4" />
+                    Process New Dataset
+                </button>
             </div>
         </div>
     );

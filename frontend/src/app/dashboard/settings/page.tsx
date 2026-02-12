@@ -191,20 +191,7 @@ export default function SettingsPage() {
                                 </button>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">
-                                    Theme
-                                </label>
-                                <select
-                                    value={formData.theme}
-                                    onChange={(e) => setFormData({ ...formData, theme: e.target.value })}
-                                    className="w-full px-4 py-2 border border-white/10 rounded-lg bg-slate-900/50 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                                >
-                                    <option value="dark">Dark (AI Studio)</option>
-                                    <option value="light">Light</option>
-                                    <option value="system">System</option>
-                                </select>
-                            </div>
+
                         </div>
                     </div>
 

@@ -4,6 +4,7 @@ Shared logic for auth, database, and rate limiting
 """
 
 from typing import Optional, Generator
+from datetime import datetime
 from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import APIKeyHeader, OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -63,10 +64,40 @@ async def validate_api_key(
         
     # CONFERENCE DEMO BYPASS
     if api_key == "cl_live_demo_key_2026_scientific_symposium":
-        result = await db.execute(select(User).where(User.email == "demo@cleara.com"))
+        # Ensure demo user exists in DB to prevent FK errors in analytics/logs
+        stmt = select(User).where(User.email == "demo@cleara.com")
+        result = await db.execute(stmt)
         user = result.scalars().first()
-        if user:
-            return user
+        
+        if not user:
+            from app.core.security import hash_password
+            new_user = User(
+                id="demo-user-123", # Fixed ID for consistency
+                email="demo@cleara.com", 
+                username="demo_user",
+                full_name="Demo User",
+                hashed_password=hash_password("demo123"),
+                is_active=True,
+                is_verified=True,
+                subscription_tier="enterprise", # Unrestricted
+                created_at=datetime.utcnow()
+            )
+            # Handle potential race condition or ID conflict if cleaning job ran partially
+            try:
+                db.add(new_user)
+                await db.commit()
+                await db.refresh(new_user)
+                return new_user
+            except Exception as e:
+                await db.rollback()
+                # If failed, try fetching again
+                result = await db.execute(stmt)
+                user = result.scalars().first()
+                if user: return user
+                # If still failing, return detached user (wont log usage but wont crash workflow)
+                return new_user
+        
+        return user
         
     # In a real app, we'd hash the key before looking it up
     # result = await db.execute(select(APIKey).where(APIKey.key == hash_api_key(api_key)))

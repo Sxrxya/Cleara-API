@@ -7,7 +7,10 @@ import os
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
-load_dotenv()
+# Ensure we load from the backend directory regardless of where the command is run
+from pathlib import Path
+env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
 
 class Settings:

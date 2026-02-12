@@ -26,31 +26,40 @@ class FreeAIService:
     
     def __init__(self):
         # Initialize Hugging Face
-        hf_token = settings.HUGGINGFACE_API_KEY
-        if hf_token:
-            self.hf_client = InferenceClient(token=hf_token)
-            self.hf_available = True
-        else:
+        try:
+            hf_token = settings.HUGGINGFACE_API_KEY
+            if hf_token:
+                self.hf_client = InferenceClient(token=hf_token)
+                self.hf_available = True
+            else:
+                self.hf_available = False
+        except Exception as e:
+            print(f"HuggingFace Init Failed: {e}")
             self.hf_available = False
         
         # Initialize Groq
-        groq_key = settings.GROQ_API_KEY
-        if groq_key:
-            self.groq_client = Groq(api_key=groq_key)
-            self.groq_available = True
-        else:
+        try:
+            groq_key = settings.GROQ_API_KEY
+            if groq_key:
+                self.groq_client = Groq(api_key=groq_key)
+                self.groq_available = True
+            else:
+                self.groq_available = False
+        except Exception as e:
+            print(f"Groq Init Failed: {e}")
             self.groq_available = False
         
         # Initialize Gemini
-        gemini_key = settings.GOOGLE_API_KEY
-        if gemini_key:
-            genai.configure(api_key=gemini_key)
-            try:
+        try:
+            gemini_key = settings.GOOGLE_API_KEY
+            if gemini_key:
+                genai.configure(api_key=gemini_key)
                 self.gemini_model = genai.GenerativeModel('gemini-1.5-flash')
                 self.gemini_available = True
-            except Exception:
+            else:
                 self.gemini_available = False
-        else:
+        except Exception as e:
+            print(f"Gemini Init Failed: {e}")
             self.gemini_available = False
         
         # Model configurations
@@ -74,53 +83,69 @@ class FreeAIService:
         Groq -> Best for validation
         """
         
-        # 1. Ask Gemini for structure and mapping
-        gemini_prompt = f"""
-        Identify the correct field structure and canonical field names for this data.
-        Rename inconsistent keys to standard industry names (e.g., 'fname' to 'first_name').
-        
-        Data Sample: {json.dumps(data)}
-        
-        Return valid JSON with:
-        {{
-            "schema": {{ "original_key": "canonical_key" }},
-            "types": {{ "canonical_key": "type" }},
-            "confidence": 0.0-1.0
-        }}
-        """
-        
-        gemini_resp = await self.gemini_model.generate_content_async(
-            gemini_prompt,
-            generation_config=genai.GenerationConfig(
-                temperature=0.1,
-                response_mime_type="application/json"
-            )
-        )
-        
-        mapping = json.loads(gemini_resp.text)
-        
-        # 2. Use Groq to validate the mapping (Cross-verify)
-        if self.groq_available:
-            groq_prompt = f"""
-            Validate this schema mapping. Is it logical?
-            Mapping: {json.dumps(mapping)}
-            Data: {json.dumps(data)}
+        try:
+            # 1. Ask Gemini for structure and mapping
+            gemini_prompt = f"""
+            Identify the correct field structure and canonical field names for this data.
+            Rename inconsistent keys to standard industry names (e.g., 'fname' to 'first_name').
             
-            Return ONLY a boolean 'is_valid' and optional 'adjustments' in JSON.
+            Data Sample: {json.dumps(data)}
+            
+            Return valid JSON with:
+            {{
+                "schema": {{ "original_key": "canonical_key" }},
+                "types": {{ "canonical_key": "type" }},
+                "confidence": 0.0-1.0
+            }}
             """
             
-            groq_resp = self.groq_client.chat.completions.create(
-                model=self.groq_model,
-                messages=[{"role": "user", "content": groq_prompt}],
-                temperature=0.0
-            )
-            validation = json.loads(groq_resp.choices[0].message.content)
+            if self.gemini_available:
+                gemini_resp = await self.gemini_model.generate_content_async(
+                    gemini_prompt,
+                    generation_config=genai.GenerationConfig(
+                        temperature=0.1,
+                        response_mime_type="application/json"
+                    )
+                )
+                mapping = json.loads(gemini_resp.text)
+            else:
+                raise Exception("Gemini not available")
             
-            if not validation.get("is_valid", True):
-                if "adjustments" in validation:
-                    mapping.update(validation["adjustments"])
-        
-        return mapping
+            # 2. Use Groq to validate the mapping (Cross-verify)
+            if self.groq_available:
+                try:
+                    groq_prompt = f"""
+                    Validate this schema mapping. Is it logical?
+                    Mapping: {json.dumps(mapping)}
+                    Data: {json.dumps(data)}
+                    
+                    Return ONLY a boolean 'is_valid' and optional 'adjustments' in JSON.
+                    """
+                    
+                    groq_resp = self.groq_client.chat.completions.create(
+                        model=self.groq_model,
+                        messages=[{"role": "user", "content": groq_prompt}],
+                        temperature=0.0
+                    )
+                    validation = json.loads(groq_resp.choices[0].message.content)
+                    
+                    if not validation.get("is_valid", True):
+                        if "adjustments" in validation:
+                            mapping.update(validation["adjustments"])
+                except Exception as e:
+                    print(f"Groq validation failed: {e}")
+            
+            return mapping
+            
+        except Exception as e:
+            print(f"Schema detection failed: {e}")
+            # Fallback: Infer schema from keys
+            return {
+                "schema": {k: k for k in data.keys()},
+                "types": {k: type(v).__name__ for k, v in data.items()},
+                "confidence": 0.5,
+                "note": "AI detection failed, using raw schema"
+            }
 
     # ============================================================================
     # STEP 5: AI VALIDATION LAYER (Gemini Reasoning + Groq Speed)
@@ -132,27 +157,41 @@ class FreeAIService:
         Gemini corrects complex errors, Groq accelerates simple ones.
         """
         
-        prompt = f"""
-        Validate and correct these values. 
-        - Fix email typos (gmial.com -> gmail.com)
-        - Standardize phone numbers (+country code)
-        - Format addresses
-        
-        Data: {json.dumps(data)}
-        
-        Return JSON of corrected values and valid/invalid status for each field.
-        """
-        
-        # We use Gemini for the heavy reasoning part of correction
-        response = await self.gemini_model.generate_content_async(
-            prompt,
-            generation_config=genai.GenerationConfig(
-                temperature=0.1,
-                response_mime_type="application/json"
-            )
-        )
-        
-        return json.loads(response.text)
+        try:
+            prompt = f"""
+            Validate and correct these values. 
+            - Fix email typos (gmial.com -> gmail.com)
+            - Standardize phone numbers (+country code)
+            - Format addresses
+            
+            Data: {json.dumps(data)}
+            
+            Return JSON of corrected values and valid/invalid status for each field.
+            """
+            
+            if self.gemini_available:
+                # We use Gemini for the heavy reasoning part of correction
+                response = await self.gemini_model.generate_content_async(
+                    prompt,
+                    generation_config=genai.GenerationConfig(
+                        temperature=0.1,
+                        response_mime_type="application/json"
+                    )
+                )
+                return json.loads(response.text)
+            else:
+                 raise Exception("Gemini not available")
+                 
+        except Exception as e:
+            print(f"AI validation failed: {e}")
+            # Fallback: Basic rule-based cleaning
+            # We can reuse the internal fallback logic here if we had access, 
+            # for now return original with a flag
+            return {
+                "corrected_values": data,
+                "validation_status": {k: "unchecked" for k in data.keys()},
+                "note": "AI validation failed"
+            }
 
     # ============================================================================
     # STEP 6: DEDUPLICATION ENGINE (Groq Embeddings)
@@ -181,26 +220,33 @@ class FreeAIService:
         Predict missing fields based on context.
         """
         
-        prompt = f"""
-        Enrich this data by predicting missing fields.
-        - Infer country/city from phone or postal code.
-        - Determine business sector from company name.
-        - Fill incomplete names if obvious.
-        
-        Input: {json.dumps(data)}
-        
-        Return JSON of enriched fields + confidence scores.
-        """
-        
-        response = await self.gemini_model.generate_content_async(
-            prompt,
-            generation_config=genai.GenerationConfig(
-                temperature=0.2,
-                response_mime_type="application/json"
-            )
-        )
-        
-        return json.loads(response.text)
+        try:
+            prompt = f"""
+            Enrich this data by predicting missing fields.
+            - Infer country/city from phone or postal code.
+            - Determine business sector from company name.
+            - Fill incomplete names if obvious.
+            
+            Input: {json.dumps(data)}
+            
+            Return JSON of enriched fields + confidence scores.
+            """
+            
+            if self.gemini_available:
+                response = await self.gemini_model.generate_content_async(
+                    prompt,
+                    generation_config=genai.GenerationConfig(
+                        temperature=0.2,
+                        response_mime_type="application/json"
+                    )
+                )
+                return json.loads(response.text)
+            else:
+                return {"enriched_fields": {}, "confidence": 0.0}
+                
+        except Exception as e:
+             print(f"Enrichment failed: {e}")
+             return {"enriched_fields": {}, "confidence": 0.0}
 
     # ============================================================================
     # STEP 8 & 9: FULL WORKFLOW ORCHESTRATOR

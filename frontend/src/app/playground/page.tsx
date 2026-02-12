@@ -12,125 +12,91 @@ export default function PlaygroundPage() {
     const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
 
     // Data state
-    const [inputData, setInputData] = useState("");
-    const [selectedFormats, setSelectedFormats] = useState<number[]>([4]);
-    const [processingData, setProcessingData] = useState<any>(null);
-    const [results, setResults] = useState<any>(null);
+    const [inputData, setInputData] = useState<string>("");
+    const [resultData, setResultData] = useState<any>(null);
 
-    // Step navigation
-    const goToStep = (step: 1 | 2 | 3) => {
-        setCurrentStep(step);
-    };
-
-    const handleStartProcessing = async (data: string, formats: number[]) => {
-        setInputData(data);
-        setSelectedFormats(formats);
-        setCurrentStep(2); // Move to processing step
-
-        // Store processing data for the processing step
-        setProcessingData({ data, formats });
-    };
-
-    const handleProcessingComplete = (resultData: any) => {
-        setResults(resultData);
-        setCurrentStep(3); // Move to results step
-    };
-
-    const handleReset = () => {
-        setCurrentStep(1);
-        setInputData("");
-        setSelectedFormats([4]);
-        setProcessingData(null);
-        setResults(null);
+    const handleProcessingComplete = (results: any) => {
+        setResultData(results);
+        setCurrentStep(3);
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-[#020617]">
+        <div className="space-y-6">
             {/* Header */}
-            <header className="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-white/5 px-6 py-4">
-                <div className="max-w-7xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
-                            <Sparkles className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">AI Workflow Playground</h1>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                {currentStep === 1 && "Step 1: Input Data"}
-                                {currentStep === 2 && "Step 2: Processing"}
-                                {currentStep === 3 && "Step 3: Results"}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        {currentStep > 1 && (
-                            <button
-                                onClick={handleReset}
-                                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-                            >
-                                <ArrowLeft className="w-4 h-4" />
-                                Start Over
-                            </button>
-                        )}
-                        <Link
-                            href="/dashboard"
-                            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-                        >
-                            Back to Dashboard
-                        </Link>
-                    </div>
+            <div className="relative flex items-center justify-center py-4 mb-2">
+                <Link
+                    href="/dashboard"
+                    className="absolute left-0 p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
+                >
+                    <ArrowLeft className="w-6 h-6" />
+                </Link>
+                <div className="text-center space-y-1">
+                    <h1 className="text-3xl font-bold tracking-tight text-white">Interactive Playground</h1>
+                    <p className="text-slate-400">Test the Cleara engine with your own data.</p>
                 </div>
+            </div>
 
-                {/* Progress Indicator */}
-                <div className="max-w-7xl mx-auto mt-4">
-                    <div className="flex items-center justify-between">
-                        {[1, 2, 3].map((step) => (
-                            <div key={step} className="flex items-center flex-1">
-                                <div className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold ${currentStep >= step
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-200 dark:bg-gray-700 text-gray-500'
-                                    }`}>
-                                    {step}
+            {/* Stepper */}
+            <div className="max-w-2xl mx-auto py-4">
+                <div className="flex justify-between">
+                    {[1, 2, 3].map((step) => {
+                        const isActive = step === currentStep;
+                        const isCompleted = step < currentStep;
+
+                        return (
+                            <div key={step} className="flex flex-col items-center gap-2 bg-slate-950 px-4">
+                                <div
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${isActive
+                                        ? "bg-indigo-600 text-white shadow-[0_0_20px_rgba(99,102,241,0.5)] scale-110"
+                                        : isCompleted
+                                            ? "bg-green-500 text-white"
+                                            : "bg-slate-800 text-slate-400"
+                                        }`}
+                                >
+                                    {isCompleted ? (
+                                        <Sparkles className="w-5 h-5" />
+                                    ) : (
+                                        step
+                                    )}
                                 </div>
-                                {step < 3 && (
-                                    <div className={`flex-1 h-1 mx-2 ${currentStep > step
-                                            ? 'bg-blue-600'
-                                            : 'bg-gray-200 dark:bg-gray-700'
-                                        }`} />
-                                )}
+                                <span className={`text-xs font-medium ${isActive ? "text-indigo-400" : "text-slate-500"}`}>
+                                    {step === 1 && "Input Data"}
+                                    {step === 2 && "Processing"}
+                                    {step === 3 && "Results"}
+                                </span>
                             </div>
-                        ))}
-                    </div>
-                    <div className="flex justify-between mt-2 text-xs font-medium text-gray-600 dark:text-gray-400">
-                        <span>Input Data</span>
-                        <span>Processing</span>
-                        <span>Results</span>
-                    </div>
+                        );
+                    })}
                 </div>
-            </header>
+            </div>
 
-            {/* Main Content */}
-            <main className="p-6">
+            {/* Content Area */}
+            <div className="bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-2xl p-6 min-h-[600px] shadow-2xl shadow-black/20">
                 {currentStep === 1 && (
-                    <InputDataStep onStartProcessing={handleStartProcessing} />
+                    <InputDataStep
+                        data={inputData}
+                        setData={setInputData}
+                        onStartProcessing={(data, formats) => console.log('Starting processing', data, formats)}
+                        onNext={() => setCurrentStep(2)}
+                    />
                 )}
-
-                {currentStep === 2 && processingData && (
+                {currentStep === 2 && (
                     <ProcessingStep
-                        inputData={processingData.data}
-                        selectedFormats={processingData.formats}
+                        inputData={inputData}
                         onComplete={handleProcessingComplete}
                     />
                 )}
-
-                {currentStep === 3 && results && (
+                {currentStep === 3 && resultData && (
                     <ResultsStep
-                        results={results}
-                        onStartOver={handleReset}
+                        data={resultData}
+                        onReset={() => {
+                            setInputData("");
+                            setResultData(null);
+                            setCurrentStep(1);
+                        }}
                     />
                 )}
-            </main>
+            </div>
         </div>
     );
 }

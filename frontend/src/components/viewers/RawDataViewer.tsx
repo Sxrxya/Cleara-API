@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Code, Table, Download, Copy, Check } from "lucide-react";
+import { Code, Table, Download, Copy, Check, FileJson, FileSpreadsheet } from "lucide-react";
 
 interface RawDataViewerProps {
     data: any;
@@ -12,7 +12,8 @@ export default function RawDataViewer({ data }: RawDataViewerProps) {
     const [copied, setCopied] = useState(false);
 
     const rawData = data.data || {};
-    const records = rawData.records || [rawData];
+    // Extract records properly depending on structure
+    const records = Array.isArray(rawData) ? rawData : (rawData.records || [rawData]);
 
     const copyToClipboard = () => {
         navigator.clipboard.writeText(JSON.stringify(rawData, null, 2));
@@ -31,13 +32,14 @@ export default function RawDataViewer({ data }: RawDataViewerProps) {
     };
 
     const downloadCSV = () => {
-        if (records.length === 0) return;
+        if (!records || records.length === 0) return;
 
-        const headers = Object.keys(records[0]);
+        // Collect all unique headers
+        const headers = Array.from(new Set(records.flatMap((r: any) => Object.keys(r)))) as string[];
         const csvContent = [
             headers.join(','),
             ...records.map((row: any) =>
-                headers.map(header => JSON.stringify(row[header] || '')).join(',')
+                headers.map(header => JSON.stringify(row[header] !== undefined ? row[header] : '')).join(',')
             )
         ].join('\n');
 
@@ -51,91 +53,99 @@ export default function RawDataViewer({ data }: RawDataViewerProps) {
     };
 
     return (
-        <div className="space-y-4 p-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
+        <div className="space-y-6">
+            {/* Header Controls */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                    <Code className="w-6 h-6 text-blue-500" />
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">Raw Cleaned Data</h3>
+                    <div className="p-2 bg-indigo-500/10 rounded-lg">
+                        <Code className="w-5 h-5 text-indigo-400" />
+                    </div>
+                    <h3 className="text-lg font-bold text-white">Raw Cleaned Data</h3>
                 </div>
-                <div className="flex gap-2">
+
+                <div className="flex bg-slate-900/50 p-1 rounded-lg border border-white/5">
                     <button
                         onClick={() => setViewMode('table')}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${viewMode === 'table'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'table'
+                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/25'
+                            : 'text-slate-400 hover:text-white hover:bg-white/5'
                             }`}
                     >
-                        <Table className="w-4 h-4 inline mr-2" />
-                        Table
+                        <Table className="w-4 h-4" />
+                        Table View
                     </button>
                     <button
                         onClick={() => setViewMode('json')}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${viewMode === 'json'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'json'
+                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/25'
+                            : 'text-slate-400 hover:text-white hover:bg-white/5'
                             }`}
                     >
-                        <Code className="w-4 h-4 inline mr-2" />
-                        JSON
+                        <Code className="w-4 h-4" />
+                        JSON View
                     </button>
                 </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-2">
+            {/* Action Bar */}
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-white/5">
                 <button
                     onClick={copyToClipboard}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors border border-white/5 text-sm font-medium"
                 >
-                    {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                    {copied ? 'Copied!' : 'Copy JSON'}
+                    {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                    {copied ? 'Copied!' : 'Copy to Clipboard'}
                 </button>
+                <div className="flex-1"></div>
                 <button
                     onClick={downloadJSON}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-indigo-600 text-white rounded-lg transition-colors border border-white/5 hover:border-indigo-500/50 text-sm font-medium group"
                 >
-                    <Download className="w-4 h-4" />
+                    <FileJson className="w-4 h-4 text-indigo-400 group-hover:text-white transition-colors" />
                     Download JSON
                 </button>
                 <button
                     onClick={downloadCSV}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-green-600 text-white rounded-lg transition-colors border border-white/5 hover:border-green-500/50 text-sm font-medium group"
                 >
-                    <Download className="w-4 h-4" />
+                    <FileSpreadsheet className="w-4 h-4 text-green-400 group-hover:text-white transition-colors" />
                     Download CSV
                 </button>
             </div>
 
-            {/* Content */}
+            {/* Content Area */}
             {viewMode === 'table' ? (
-                <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                    <div className="overflow-x-auto max-h-96">
-                        <table className="w-full text-sm">
-                            <thead className="bg-gray-50 dark:bg-slate-900 sticky top-0">
+                <div className="bg-slate-950/50 rounded-xl border border-white/10 overflow-hidden shadow-inner">
+                    <div className="overflow-x-auto max-h-[500px] scrollbar-thin scrollbar-thumb-indigo-500/20 scrollbar-track-transparent">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-slate-900/80 sticky top-0 z-10 backdrop-blur-sm">
                                 <tr>
-                                    <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
+                                    <th className="px-6 py-4 font-semibold text-slate-300 border-b border-white/10 w-16 text-center">
                                         #
                                     </th>
-                                    {Object.keys(records[0] || {}).map((key) => (
-                                        <th key={key} className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
+                                    {records.length > 0 && Object.keys(records[0]).map((key) => (
+                                        <th key={key} className="px-6 py-4 font-semibold text-slate-300 border-b border-white/10 whitespace-nowrap">
                                             {key}
                                         </th>
                                     ))}
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="divide-y divide-white/5">
                                 {records.map((row: any, idx: number) => (
-                                    <tr key={idx} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                                        <td className="px-4 py-3 text-gray-500 dark:text-gray-400 font-medium">
+                                    <tr key={idx} className="hover:bg-white/5 transition-colors group">
+                                        <td className="px-6 py-3 text-slate-500 font-mono text-xs text-center border-r border-white/5 group-hover:text-indigo-400">
                                             {idx + 1}
                                         </td>
                                         {Object.values(row).map((value: any, cellIdx: number) => (
-                                            <td key={cellIdx} className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                                            <td key={cellIdx} className="px-6 py-3 text-slate-300 whitespace-nowrap">
                                                 {value === null || value === undefined ? (
-                                                    <span className="text-gray-400 italic">null</span>
+                                                    <span className="text-slate-600 italic text-xs">null</span>
+                                                ) : typeof value === 'object' ? (
+                                                    <span className="text-indigo-300 font-mono text-xs">{JSON.stringify(value).substring(0, 30)}...</span>
                                                 ) : (
-                                                    String(value)
+                                                    <span className={typeof value === 'number' ? 'font-mono text-purple-300' : ''}>
+                                                        {String(value)}
+                                                    </span>
                                                 )}
                                             </td>
                                         ))}
@@ -143,36 +153,20 @@ export default function RawDataViewer({ data }: RawDataViewerProps) {
                                 ))}
                             </tbody>
                         </table>
+                        {records.length === 0 && (
+                            <div className="p-8 text-center text-slate-500">
+                                No records found to display.
+                            </div>
+                        )}
                     </div>
                 </div>
             ) : (
-                <div className="bg-gray-900 rounded-lg p-4 overflow-auto max-h-96">
-                    <pre className="text-sm text-green-400 font-mono">
-                        {JSON.stringify(rawData, null, 2)}
+                <div className="bg-slate-950/80 rounded-xl border border-white/10 p-4 shadow-inner">
+                    <pre className="text-sm font-mono overflow-auto max-h-[500px] scrollbar-thin scrollbar-thumb-indigo-500/20 scrollbar-track-transparent">
+                        <code className="text-green-400/90 shadow-none">
+                            {JSON.stringify(rawData, null, 2)}
+                        </code>
                     </pre>
-                </div>
-            )}
-
-            {/* Metadata */}
-            {data.metadata && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                    <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Metadata</h4>
-                    <div className="grid grid-cols-3 gap-4 text-sm">
-                        <div>
-                            <span className="text-blue-700 dark:text-blue-300">Format:</span>
-                            <span className="ml-2 font-mono text-blue-900 dark:text-blue-100">{data.metadata.format_type}</span>
-                        </div>
-                        <div>
-                            <span className="text-blue-700 dark:text-blue-300">Records:</span>
-                            <span className="ml-2 font-mono text-blue-900 dark:text-blue-100">{data.metadata.record_count}</span>
-                        </div>
-                        <div>
-                            <span className="text-blue-700 dark:text-blue-300">Timestamp:</span>
-                            <span className="ml-2 font-mono text-blue-900 dark:text-blue-100 text-xs">
-                                {new Date(data.metadata.timestamp).toLocaleString()}
-                            </span>
-                        </div>
-                    </div>
                 </div>
             )}
         </div>

@@ -31,49 +31,58 @@ class DeduplicationEngine:
         2. Compute similarity
         3. Resolve conflicts via Gemini
         """
-        if not data:
-            return []
+        try:
+            if not data:
+                return []
 
-        # 1. Generate text representation for embeddings
-        texts = [
-            " ".join([str(v) for v in r.values() if v])
-            for r in data
-        ]
-        
-        # 2. Get all embeddings
-        embeddings = []
-        for text in texts:
-            emb = await self.ai_service.get_embeddings(text)
-            embeddings.append(emb)
+            # 1. Generate text representation for embeddings
+            texts = [
+                " ".join([str(v) for v in r.values() if v])
+                for r in data
+            ]
             
-        # 3. Find groups
-        unique_records = []
-        visited = [False] * len(data)
-        
-        for i in range(len(data)):
-            if visited[i]:
-                continue
+            # 2. Get all embeddings
+            embeddings = []
+            for text in texts:
+                # Check for AI availability implicitly via try/except
+                try:
+                    emb = await self.ai_service.get_embeddings(text)
+                    embeddings.append(emb)
+                except:
+                    # If embedding fails, return original data (abort dedupe)
+                    return data
                 
-            group = [data[i]]
-            visited[i] = True
+            # 3. Find groups
+            unique_records = []
+            visited = [False] * len(data)
             
-            for j in range(i + 1, len(data)):
-                if visited[j]:
+            for i in range(len(data)):
+                if visited[i]:
                     continue
                     
-                similarity = self.cosine_similarity(embeddings[i], embeddings[j])
-                if similarity >= threshold:
-                    group.append(data[j])
-                    visited[j] = True
-            
-            # 4. Resolve group into master record
-            if len(group) > 1:
-                master = await self.resolve_conflicts(group)
-                unique_records.append(master)
-            else:
-                unique_records.append(group[0])
+                group = [data[i]]
+                visited[i] = True
                 
-        return unique_records
+                for j in range(i + 1, len(data)):
+                    if visited[j]:
+                        continue
+                        
+                    similarity = self.cosine_similarity(embeddings[i], embeddings[j])
+                    if similarity >= threshold:
+                        group.append(data[j])
+                        visited[j] = True
+                
+                # 4. Resolve group into master record
+                if len(group) > 1:
+                    master = await self.resolve_conflicts(group)
+                    unique_records.append(master)
+                else:
+                    unique_records.append(group[0])
+                    
+            return unique_records
+        except Exception as e:
+            print(f"Deduplication failed: {e}")
+            return data
 
     async def resolve_conflicts(self, group: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Use Gemini to pick best fields from duplicates"""
